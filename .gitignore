@@ -26,10 +26,13 @@ config/
 
 # === Wallets  ===
 wallet/
+api/wallet/
 
 # === Node.js artifacts ===
 node_modules/
+api/node_modules/
 package-lock.json
+api/package-lock.json
 
 # === Logs ===
 *.log

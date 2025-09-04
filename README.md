@@ -201,14 +201,37 @@ Both existing and newly registered users can authenticate.
 
 ```
 test-network/
- ├── enrollAdmin.js     # Enrolls the CA admin
- ├── registerUser.js    # Registers and enrolls new users
- ├── app.js             # Simple test app to authenticate and query ledger
- ├── server.js          # REST API for registration/login
- ├── addToWallet.js     # Utility for adding identities to wallet
- ├── wallet/            # Stores enrolled identities
- ├── package.json       # Node.js dependencies
- └── connection-org1.json # Connection profile for Org1
+ ├── enrollAdmin.js          # Enrolls the CA admin
+ ├── registerUser.js         # Registers and enrolls new users
+ ├── app.js                  # Simple test app to authenticate and query ledger
+ ├── server.js               # REST API (if used at root level)
+ ├── addToWallet.js          # Utility for adding identities to wallet
+ ├── wallet/                 # Stores enrolled identities (e.g., user1.id)
+ │    └── user1.id
+ ├── connection-org1.json    # Connection profile for Org1
+ ├── package.json            # Node.js dependencies (root app if any)
+ ├── package-lock.json
+ ├── api/                    # === Bonus section: REST API with user management ===
+ │    ├── enrollAdmin.js     # Enrolls Org1 CA admin into api/wallet
+ │    ├── registerUser.js    # Registers and enrolls new users
+ │    ├── loginUser.js       # Authenticates users and queries ledger
+ │    ├── server.js          # Express.js server exposing /register & /login
+ │    ├── package.json
+ │    ├── package-lock.json
+ │    ├── wallet/            # Dedicated wallet for API users
+ │    │    ├── admin.id
+ │    │    ├── user1.id
+ │    │    ├── user2.id
+ │    │    ├── user3.id
+ │    │    └── user4.id
+ │    └── node_modules/
+ └── submission_artifacts/   # Logs required for deliverables
+      ├── admin-enroll.log
+      ├── user-registration.log
+      ├── user-enroll.log
+      ├── user-msp-listing.log
+      └── auth-query.log
+
 ```
 
 
