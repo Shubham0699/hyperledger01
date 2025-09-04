@@ -29,12 +29,10 @@ async function main() {
       identity: userId,
       discovery: { enabled: true, asLocalhost: true }
     });
-
-    // Get network and contract
+  
     const network = await gateway.getNetwork(channelName);
     const contract = network.getContract(chaincodeName);
 
-    // Evaluate a read-only transaction to prove auth
     const resultBuffer = await contract.evaluateTransaction('GetAllAssets');
     const result = resultBuffer.toString('utf8');
 

@@ -29,7 +29,7 @@ async function loginUser(username) {
 
   let result;
   try {
-    result = JSON.parse(resultJson); // ✅ convert to proper JS object/array
+    result = JSON.parse(resultJson); //  convert to proper JS object/array
   } catch (e) {
     result = resultJson; // fallback in case it’s not JSON
   }
