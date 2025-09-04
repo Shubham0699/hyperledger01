@@ -124,10 +124,13 @@ node app.js
 
 ```json
 Auth OK. Ledger query result:
-[
-  {"ID":"asset1","Color":"blue","Size":5,"Owner":"Tomoko","AppraisedValue":300},
-  {"ID":"asset2","Color":"red","Size":5,"Owner":"Brad","AppraisedValue":400}
-]
+[{"AppraisedValue":300,"Color":"blue","ID":"asset1","Owner":"Tomoko","Size":5},
+ {"AppraisedValue":400,"Color":"red","ID":"asset2","Owner":"Brad","Size":5},
+ {"AppraisedValue":500,"Color":"green","ID":"asset3","Owner":"Jin Soo","Size":10},
+ {"AppraisedValue":600,"Color":"yellow","ID":"asset4","Owner":"Max","Size":10},
+ {"AppraisedValue":700,"Color":"black","ID":"asset5","Owner":"Adriana","Size":15},
+ {"AppraisedValue":800,"Color":"white","ID":"asset6","Owner":"Michel","Size":15}]
+
 ```
 
 This confirms that the identity from the wallet is valid and can successfully interact with the blockchain.
