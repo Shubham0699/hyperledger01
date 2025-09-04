@@ -1,68 +1,258 @@
-# Running the test network
+# Hyperledger Fabric – User Registration & Authentication
 
-You can use the `./network.sh` script to stand up a simple Fabric test network. The test network has two peer organizations with one peer each and a single node raft ordering service. You can also use the `./network.sh` script to create channels and deploy chaincode. For more information, see [Using the Fabric test network](https://hyperledger-fabric.readthedocs.io/en/latest/test_network.html). The test network is being introduced in Fabric v2.0 as the long term replacement for the `first-network` sample.
+##  Project Overview
 
-If you are planning to run the test network with consensus type BFT then please pass `-bft` flag as input to the `network.sh` script when creating the channel. This sample also supports the use of consensus type BFT and CA together.
-That is to create a network use:
+This project demonstrates how to implement a **user registration and authentication flow** in a Hyperledger Fabric network using the **Fabric CA (Certificate Authority)**. The aim is to showcase a clear understanding of how Fabric issues identities, stores them securely, and uses them to authenticate users when they interact with the blockchain.
+
+The workflow includes:
+
+* Setting up a Fabric test network with Certificate Authorities.
+* Enrolling the CA admin and registering/enrolling new users.
+* Storing user identities in a wallet.
+* Authenticating users by connecting to the Fabric Gateway and performing ledger queries.
+* (Bonus) Building a **Node.js REST API** that supports user registration and login.
+
+---
+
+##  Objectives
+
+1. **Environment Setup** – Install Fabric binaries and start the test network with CAs.
+2. **Fabric CA Operations** – Enroll CA admin, register and enroll user identities.
+3. **Identity Management** – Store credentials in a wallet for secure usage.
+4. **Authentication Flow** – Verify users by querying the ledger through Fabric Gateway.
+5. **Bonus Objective** – Provide a REST API for registration and login.
+
+---
+
+##  Prerequisites
+
+Before starting, ensure the following are installed on your system:
+
+* **Docker & Docker Compose** (for Fabric containers)
+* **Node.js (>=v18 LTS recommended)** and npm
+* **cURL**
+* **Git**
+* **Hyperledger Fabric binaries** (peer, orderer, configtxgen, cryptogen, etc.)
+
+---
+
+##  Step 1: Install Binaries & Clone Fabric Samples
+
+Download Fabric binaries and Docker images:
+
 ```bash
-./network.sh up -bft
+curl -sSL https://bit.ly/2ysbOFE | bash -s
+cd fabric-samples/test-network
 ```
 
-To create a channel use:
+This will install Fabric CLI binaries in the `bin/` directory and set up the sample networks.
+
+---
+
+##  Step 2: Launch the Test Network with CAs
+
+Bring up the test network with Certificate Authorities enabled:
 
 ```bash
-./network.sh createChannel -bft
+./network.sh up createChannel -c mychannel -ca
+./network.sh deployCC -ccn basic -ccp ../asset-transfer-basic/chaincode-go -ccl go
 ```
 
-To restart a running network use:
+* **Channel:** `mychannel`
+* **Chaincode:** `basic` (Asset Transfer)
+
+ At this point, the Fabric network is running, and chaincode is deployed.
+
+---
+
+##  Step 3: Enroll CA Admin
+
+Use the Fabric CA client to enroll the CA admin. This identity is required for registering new users.
 
 ```bash
-./network.sh restart -bft
+node enrollAdmin.js
 ```
 
-Note that running the createChannel command will start the network, if it is not already running.
+ Expected Output: `Successfully enrolled admin and imported it into the wallet`
 
-Before you can deploy the test network, you need to follow the instructions to [Install the Samples, Binaries and Docker Images](https://hyperledger-fabric.readthedocs.io/en/latest/install.html) in the Hyperledger Fabric documentation.
+The admin credentials are stored in the `wallet/` directory.
 
-## Using the Peer commands
+---
 
-The `setOrgEnv.sh` script can be used to set up the environment variables for the organizations, this will help to be able to use the `peer` commands directly.
+##  Step 4: Register & Enroll a User
 
-First, ensure that the peer binaries are on your path, and the Fabric Config path is set assuming that you're in the `test-network` directory.
+Register and enroll a new user (e.g., `user1`) via the Fabric CA:
 
 ```bash
- export PATH=$PATH:$(realpath ../bin)
- export FABRIC_CFG_PATH=$(realpath ../config)
+node registerUser.js user1
 ```
 
-You can then set up the environment variables for each organization. The `./setOrgEnv.sh` command is designed to be run as follows.
+ Expected Output: `Successfully registered and enrolled user1 and imported it into the wallet`
 
-```bash
-export $(./setOrgEnv.sh Org2 | xargs)
+This will generate the certificate/private key for `user1` and save them in the wallet.
+
+---
+
+##  Step 5: Wallet Structure
+
+The **wallet/** folder stores all enrolled identities:
+
+```
+wallet/
+ ├── admin.id
+ ├── user1.id
+ ├── user2.id (if registered later)
 ```
 
-(Note bash v4 is required for the scripts.)
+Each file represents an identity containing:
 
-You will now be able to run the `peer` commands in the context of Org2. If a different command prompt, you can run the same command with Org1 instead.
-The `setOrgEnv` script outputs a series of `<name>=<value>` strings. These can then be fed into the export command for your current shell.
+* User’s **certificate**
+* User’s **private key**
+* Associated MSP (Membership Service Provider)
 
-## Chaincode-as-a-service
+---
 
-To learn more about how to use the improvements to the Chaincode-as-a-service please see this [tutorial](./test-network/../CHAINCODE_AS_A_SERVICE_TUTORIAL.md). It is expected that this will move to augment the tutorial in the [Hyperledger Fabric ReadTheDocs](https://hyperledger-fabric.readthedocs.io/en/release-2.4/cc_service.html)
+##  Step 6: Authenticate User (Simple App)
 
-
-## Podman
-
-*Note - podman support should be considered experimental but the following has been reported to work with podman 4.1.1 on Mac. If you wish to use podman a LinuxVM is recommended.*
-
-Fabric's `install-fabric.sh` script has been enhanced to support using `podman` to pull down images and tag them rather than docker. The images are the same, just pulled differently. Simply specify the 'podman' argument when running the `install-fabric.sh` script. 
-
-Similarly, the `network.sh` script has been enhanced so that it can use `podman` and `podman-compose` instead of docker. Just set the environment variable `CONTAINER_CLI` to `podman` before running the `network.sh` script:
+Run the Node.js test application to authenticate a user and query the ledger:
 
 ```bash
-CONTAINER_CLI=podman ./network.sh up
-````
+node app.js
+```
 
-As there is no Docker-Daemon when using podman, only the `./network.sh deployCCAAS` command will work. Following the Chaincode-as-a-service Tutorial above should work. 
+ Expected Output:
+
+```json
+Auth OK. Ledger query result:
+[
+  {"ID":"asset1","Color":"blue","Size":5,"Owner":"Tomoko","AppraisedValue":300},
+  {"ID":"asset2","Color":"red","Size":5,"Owner":"Brad","AppraisedValue":400}
+]
+```
+
+This confirms that the identity from the wallet is valid and can successfully interact with the blockchain.
+
+---
+
+##  Bonus: REST API for Registration & Login
+
+We extended the project with a **Node.js Express API** to allow programmatic registration and login.
+
+### Start the API Server
+
+```bash
+node server.js
+```
+
+ Output:
+
+```
+API server running at http://localhost:3000
+```
+
+### API Endpoints
+
+**1. Register a New User**
+
+```bash
+curl -X POST http://localhost:3000/register \
+  -H "Content-Type: application/json" \
+  -d '{"username":"user2"}'
+```
+
+ Response:
+
+```
+User user2 registered and enrolled
+```
+
+**2. Login with Existing User**
+
+```bash
+curl -X POST http://localhost:3000/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"user2"}'
+```
+
+ Response:
+
+```json
+{
+"message": "User user2 authenticated",
+"ledger": [
+{ "AppraisedValue": 300, "Color": "blue", "ID": "asset1", "Owner": "Tomoko", "Size": 5 },
+{ "AppraisedValue": 400, "Color": "red", "ID": "asset2", "Owner": "Brad", "Size": 5 },
+{ "AppraisedValue": 500, "Color": "green", "ID": "asset3", "Owner": "Jin Soo", "Size": 10 },
+{ "AppraisedValue": 600, "Color": "yellow", "ID": "asset4", "Owner": "Max", "Size": 10 },
+{ "AppraisedValue": 700, "Color": "black", "ID": "asset5", "Owner": "Adriana", "Size": 15 },
+{ "AppraisedValue": 800, "Color": "white", "ID": "asset6", "Owner": "Michel", "Size": 15 }
+]
+}
+```
+
+Both existing and newly registered users can authenticate.
+
+---
+
+##  Project Structure
+
+```
+test-network/
+ ├── enrollAdmin.js     # Enrolls the CA admin
+ ├── registerUser.js    # Registers and enrolls new users
+ ├── app.js             # Simple test app to authenticate and query ledger
+ ├── server.js          # REST API for registration/login
+ ├── addToWallet.js     # Utility for adding identities to wallet
+ ├── wallet/            # Stores enrolled identities
+ ├── package.json       # Node.js dependencies
+ └── connection-org1.json # Connection profile for Org1
+```
 
 
+---
+
+## Deliverables
+
+This section contains proof of successful user registration, enrollment, and authentication in our Hyperledger Fabric network.
+
+---
+
+### 1. CA Admin Enrollment
+- **Log:** [admin-enroll.log](submission_artifacts/admin-enroll.log)  
+- **Screenshot:**  
+  ![CA Admin Enrollment](screenshots/01-ca-admin-enroll.png)
+
+---
+
+### 2. User Registration
+- **Log:** [user-registration.log](submission_artifacts/user-registration.log)  
+- **Screenshot:**  
+  ![User Registration](screenshots/02-user1-register.png)
+
+---
+
+### 3. User Enrollment
+- **Log:** [user-enroll.log](submission_artifacts/user-enroll.log)  
+- **Screenshot:**  
+  ![User Enrollment](screenshots/03-user1-enroll.png)
+
+---
+
+### 4. User MSP (Generated Certificates)
+- **Log:** [user-msp-listing.log](submission_artifacts/user-msp-listing.log)  
+- **Screenshot:**  
+  ![User MSP](screenshots/04-user1-msp.png)
+
+---
+
+### 5. Authentication (Ledger Query)
+- **Log:** [auth-query.log](submission_artifacts/auth-query.log)  
+- **Screenshot:**  
+  ![Authentication Ledger Query](screenshots/05-auth-query.png)
+
+
+##  References
+
+* [Hyperledger Fabric Documentation](https://hyperledger-fabric.readthedocs.io/)
+* [Fabric CA Documentation](https://hyperledger-fabric-ca.readthedocs.io/)
+* [Hyperledger fabric-samples](https://github.com/hyperledger/fabric-samples)
